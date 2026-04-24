@@ -14,6 +14,9 @@ public class SpatialPanelTwoChoiceQuiz : MonoBehaviour
 
         [TextArea(1, 4)]
         public string explain;
+
+        [Header("Tower Builder (Optional)")]
+        public GameObject spawnPrefab;
     }
 
     [System.Serializable]
@@ -28,6 +31,10 @@ public class SpatialPanelTwoChoiceQuiz : MonoBehaviour
 
     [Header("Quiz Data")]
     [SerializeField] private List<QuizItem> questions = new List<QuizItem>();
+
+    [Header("Tower Builder")]
+    [Tooltip("Vị trí rớt vật liệu")]
+    [SerializeField] private Transform spawnPoint;
 
     [Header("UI - Main")]
     [SerializeField] private TextMeshProUGUI questionText;
@@ -58,6 +65,7 @@ public class SpatialPanelTwoChoiceQuiz : MonoBehaviour
     private int currentQuestionIndex;
     private int score;
     private bool answeredCurrentQuestion;
+    private bool isWaitingForSnap = false;
 
     private void Start()
     {
@@ -123,7 +131,7 @@ public class SpatialPanelTwoChoiceQuiz : MonoBehaviour
 
     public void SubmitAnswer(int selectedOption)
     {
-        if (answeredCurrentQuestion)
+        if (answeredCurrentQuestion || isWaitingForSnap)
             return;
 
         if (!IsQuestionIndexValid(currentQuestionIndex))
@@ -146,8 +154,43 @@ public class SpatialPanelTwoChoiceQuiz : MonoBehaviour
         string explanationPart = string.IsNullOrWhiteSpace(selectedAnswer.explain) ? string.Empty : "\n" + selectedAnswer.explain;
         SetFeedback(result + explanationPart);
 
-        if (nextButton != null)
-            nextButton.gameObject.SetActive(true);
+        if (selectedAnswer.spawnPrefab != null && spawnPoint != null)
+        {
+            GameObject spawnedObject = Instantiate(selectedAnswer.spawnPrefab, spawnPoint.position, spawnPoint.rotation);
+            FracturablePart part = spawnedObject.GetComponent<FracturablePart>();
+            if (part != null)
+            {
+                part.willFracture = !isCorrect;
+            }
+
+            SnapToPoint snap = spawnedObject.GetComponent<SnapToPoint>();
+            if (snap != null)
+            {
+                isWaitingForSnap = true;
+                
+                // User requirement: "tắt quizz sau đó rơi ra vật liệu"
+                // Ẩn panel (thông qua gameObject của script này)
+                gameObject.SetActive(false);
+
+                // Sau khi xếp thành công -> hiện quiz và đi tới câu tiếp
+                snap.onSnapped.AddListener(() => 
+                {
+                    isWaitingForSnap = false;
+                    gameObject.SetActive(true);
+                    NextQuestion();
+                });
+            }
+            else
+            {
+                if (nextButton != null)
+                    nextButton.gameObject.SetActive(true);
+            }
+        }
+        else
+        {
+            if (nextButton != null)
+                nextButton.gameObject.SetActive(true);
+        }
 
         SetMainInteractable(false);
     }
@@ -237,6 +280,8 @@ public class SpatialPanelTwoChoiceQuiz : MonoBehaviour
 
     private void ShowFinal()
     {
+        optionAButton.gameObject.SetActive(false);
+        optionBButton.gameObject.SetActive(false);  
         if (questionText != null)
             questionText.text = "Quiz finished";
 
@@ -266,6 +311,12 @@ public class SpatialPanelTwoChoiceQuiz : MonoBehaviour
             restartButton.gameObject.SetActive(true);
 
         ResetScrollToTop();
+
+        // Nổ tháp nếu có dùng
+        if (TowerFractureManager.instance != null)
+        {
+            TowerFractureManager.instance.FractureAll();
+        }
     }
 
     private void SetMainInteractable(bool value)

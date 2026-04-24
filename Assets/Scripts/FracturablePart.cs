@@ -5,6 +5,7 @@ public class FracturablePart : MonoBehaviour
     private GameObject fracturedObject;
     private bool isBroken = false;
     private TowerFractureManager fractureManager;
+    public bool willFracture = true;
  
     private void Awake()
     {
@@ -30,6 +31,7 @@ public class FracturablePart : MonoBehaviour
 
     public void Fracture()
     {
+        if (!willFracture) return;
         if (isBroken || fracturedObject == null) return;
 
         //fracturedObject.transform.position = transform.position;
