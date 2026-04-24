@@ -5,7 +5,7 @@ using UnityEngine.XR.Interaction.Toolkit;
 public class SnapToPoint : MonoBehaviour
 {
     public Transform snapPoint;    
-    public float snapDistance = 3f;
+    public float snapDistance = 3f; 
     public UnityEvent onSnapped = new UnityEvent();
 
     private UnityEngine.XR.Interaction.Toolkit.Interactables.XRGrabInteractable grabInteractable;
