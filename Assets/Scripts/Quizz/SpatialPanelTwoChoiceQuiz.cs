@@ -14,6 +14,9 @@ public class SpatialPanelTwoChoiceQuiz : MonoBehaviour
 
         [TextArea(1, 4)]
         public string explain;
+
+        [Header("Tower Builder (Optional)")]
+        public GameObject spawnPrefab;
     }
 
     [System.Serializable]
@@ -23,11 +26,16 @@ public class SpatialPanelTwoChoiceQuiz : MonoBehaviour
         public string questionText;
 
         public Sprite questionImage;
+        public bool chooseMaterial;
         public List<AnswerItem> answers = new List<AnswerItem>();
     }
 
     [Header("Quiz Data")]
     [SerializeField] private List<QuizItem> questions = new List<QuizItem>();
+
+    [Header("Tower Builder")]
+    [Tooltip("Vị trí rớt vật liệu")]
+    [SerializeField] private Transform spawnPoint;
 
     [Header("UI - Main")]
     [SerializeField] private TextMeshProUGUI questionText;
@@ -57,7 +65,9 @@ public class SpatialPanelTwoChoiceQuiz : MonoBehaviour
 
     private int currentQuestionIndex;
     private int score;
+    public int wrongMaterialCount;
     private bool answeredCurrentQuestion;
+    private bool isWaitingForSnap = false;
 
     private void Start()
     {
@@ -81,6 +91,7 @@ public class SpatialPanelTwoChoiceQuiz : MonoBehaviour
 
         currentQuestionIndex = 0;
         score = 0;
+        wrongMaterialCount = 0;
         ShowQuestion(currentQuestionIndex);
     }
 
@@ -123,7 +134,7 @@ public class SpatialPanelTwoChoiceQuiz : MonoBehaviour
 
     public void SubmitAnswer(int selectedOption)
     {
-        if (answeredCurrentQuestion)
+        if (answeredCurrentQuestion || isWaitingForSnap)
             return;
 
         if (!IsQuestionIndexValid(currentQuestionIndex))
@@ -137,17 +148,60 @@ public class SpatialPanelTwoChoiceQuiz : MonoBehaviour
         answeredCurrentQuestion = true;
 
         bool isCorrect = selectedAnswer.isCorrect;
-        if (isCorrect)
-            score++;
-
+        
+        if (q.chooseMaterial)
+        {
+            if (!isCorrect)
+                wrongMaterialCount++;
+        }
+        else
+        {
+            if (isCorrect)
+                score++;
+        }
         HighlightAnswerResult(q, selectedOption);
 
         string result = isCorrect ? "Correct" : "Wrong";
         string explanationPart = string.IsNullOrWhiteSpace(selectedAnswer.explain) ? string.Empty : "\n" + selectedAnswer.explain;
         SetFeedback(result + explanationPart);
 
-        if (nextButton != null)
-            nextButton.gameObject.SetActive(true);
+        if (selectedAnswer.spawnPrefab != null && spawnPoint != null)
+        {
+            GameObject spawnedObject = Instantiate(selectedAnswer.spawnPrefab, spawnPoint.position, spawnPoint.rotation);
+            FracturablePart part = spawnedObject.GetComponent<FracturablePart>();
+            if (part != null)
+            {
+                part.willFracture = !isCorrect;
+            }
+
+            SnapToPoint snap = spawnedObject.GetComponent<SnapToPoint>();
+            if (snap != null)
+            {
+                isWaitingForSnap = true;
+                
+                // User requirement: "tắt quizz sau đó rơi ra vật liệu"
+                // Ẩn panel (thông qua gameObject của script này)
+                gameObject.SetActive(false);
+
+                // Sau khi xếp thành công -> hiện quiz và đi tới câu tiếp
+                snap.onSnapped.AddListener(() => 
+                {
+                    isWaitingForSnap = false;
+                    gameObject.SetActive(true);
+                    NextQuestion();
+                });
+            }
+            else
+            {
+                if (nextButton != null)
+                    nextButton.gameObject.SetActive(true);
+            }
+        }
+        else
+        {
+            if (nextButton != null)
+                nextButton.gameObject.SetActive(true);
+        }
 
         SetMainInteractable(false);
     }
@@ -237,6 +291,8 @@ public class SpatialPanelTwoChoiceQuiz : MonoBehaviour
 
     private void ShowFinal()
     {
+        optionAButton.gameObject.SetActive(false);
+        optionBButton.gameObject.SetActive(false);  
         if (questionText != null)
             questionText.text = "Quiz finished";
 
@@ -252,8 +308,14 @@ public class SpatialPanelTwoChoiceQuiz : MonoBehaviour
 
         SetImageSprite(optionBImageView, null);
 
-        float percent = questions.Count > 0 ? (score * 100f) / questions.Count : 0f;
-        SetFeedback("Final score: " + score + "/" + questions.Count + " (" + percent.ToString("0.#") + "%)");
+        int maxScore = 0;
+        foreach (var q in questions)
+        {
+            if (!q.chooseMaterial) maxScore++;
+        }
+
+        float percent = maxScore > 0 ? (score * 100f) / maxScore : 0f;
+        SetFeedback("Final score: " + score + "/" + maxScore + " (" + percent.ToString("0.#") + "%)");
         SetFinalResultVisible(true, "Result: " + percent.ToString("0.#") + "% correct");
         SetProgress("Completed");
         SetMainInteractable(false);
@@ -266,6 +328,12 @@ public class SpatialPanelTwoChoiceQuiz : MonoBehaviour
             restartButton.gameObject.SetActive(true);
 
         ResetScrollToTop();
+
+        // Nổ tháp nếu có dùng
+        if (TowerFractureManager.instance != null)
+        {
+            TowerFractureManager.instance.FractureAll();
+        }
     }
 
     private void SetMainInteractable(bool value)

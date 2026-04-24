@@ -11,11 +11,10 @@ public class SpawnManager : MonoBehaviour
     {
         if (prefabs.Length == 0) return;
 
-        Instantiate(prefabs[currentIndex], spawnPoint.position, spawnPoint.rotation);
+        Instantiate(prefabs[currentIndex], spawnPoint.position, spawnPoint.rotation,spawnPoint);
 
         currentIndex++;
 
-        // quay vòng (0 → 3 → 0)
         if (currentIndex >= prefabs.Length)
             currentIndex = 0;
     }
