@@ -5,7 +5,7 @@ public class FracturablePart : MonoBehaviour
     private GameObject fracturedObject;
     private bool isBroken = false;
     private TowerFractureManager fractureManager;
-
+ 
     private void Awake()
     {
         string cleanName = gameObject.name.Replace("(Clone)", "");

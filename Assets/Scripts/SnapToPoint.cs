@@ -1,10 +1,12 @@
 using UnityEngine;
+using UnityEngine.Events;
 using UnityEngine.XR.Interaction.Toolkit;
 
 public class SnapToPoint : MonoBehaviour
 {
     public Transform snapPoint;    
-    public float snapDistance = 3f; 
+    public float snapDistance = 3f;
+    public UnityEvent onSnapped = new UnityEvent();
 
     private UnityEngine.XR.Interaction.Toolkit.Interactables.XRGrabInteractable grabInteractable;
     private Rigidbody rb;
@@ -59,5 +61,7 @@ public class SnapToPoint : MonoBehaviour
         // (Optional) khóa không cho grab nữa
         grabInteractable.enabled = false;
         Debug.LogError("Object snapped to point!");
+
+        onSnapped?.Invoke();
     }
 }
