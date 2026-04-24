@@ -245,7 +245,7 @@ MonoBehaviour:
   m_SmoothPosition: 0
   m_SmoothPositionAmount: 8
   m_TightenPosition: 0.1
-  m_TrackRotation: 1
+  m_TrackRotation: 0
   m_SmoothRotation: 0
   m_SmoothRotationAmount: 8
   m_TightenRotation: 0.1
@@ -335,3 +335,4 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: f1379157d6f7eb64095ac597e3cf6e21, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::FracturablePart
+  willFracture: 1
