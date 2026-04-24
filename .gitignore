@@ -80,3 +80,5 @@ crashlytics-build.properties
 *.fbx
 *.mp4
 *.wav
+*.tif
+*.psd

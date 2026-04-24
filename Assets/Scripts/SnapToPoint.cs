@@ -8,6 +8,7 @@ public class SnapToPoint : MonoBehaviour
 
     private UnityEngine.XR.Interaction.Toolkit.Interactables.XRGrabInteractable grabInteractable;
     private Rigidbody rb;
+    private GameObject foundedObject;
 
     private void Awake()
     {
@@ -19,11 +20,11 @@ public class SnapToPoint : MonoBehaviour
             string cleanName = gameObject.name.Replace("(Clone)", "");
             string targetName = "pos_" + cleanName;
 
-            GameObject found = GameObject.Find(targetName);
+            foundedObject = GameObject.Find(targetName);
 
-            if (found != null)
+            if (foundedObject != null)
             {
-                snapPoint = found.transform;
+                snapPoint = foundedObject.transform;
                 Debug.Log("Found snap point: " + targetName);
             }
             else
@@ -54,7 +55,7 @@ public class SnapToPoint : MonoBehaviour
         // Snap position + rotation
         transform.position = snapPoint.position;
         //transform.rotation = snapPoint.rotation;
-
+        foundedObject.GetComponent<MeshRenderer>().enabled = false; // Ẩn đối tượng snap point nếu có
         // (Optional) khóa không cho grab nữa
         grabInteractable.enabled = false;
         Debug.LogError("Object snapped to point!");
