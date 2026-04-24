@@ -11,6 +11,9 @@ public class SnapToPoint : MonoBehaviour
     private UnityEngine.XR.Interaction.Toolkit.Interactables.XRGrabInteractable grabInteractable;
     private Rigidbody rb;
     private GameObject foundedObject;
+    private MeshRenderer snapRenderer;
+    private Material originalMaterial;
+    public Material highlightMaterial;
 
     private void Awake()
     {
@@ -27,7 +30,12 @@ public class SnapToPoint : MonoBehaviour
             if (foundedObject != null)
             {
                 snapPoint = foundedObject.transform;
-                Debug.Log("Found snap point: " + targetName);
+                snapRenderer = foundedObject.GetComponent<MeshRenderer>();
+
+                if (snapRenderer != null)
+                {
+                    originalMaterial = snapRenderer.material;
+                }
             }
             else
             {
@@ -36,6 +44,28 @@ public class SnapToPoint : MonoBehaviour
         }
 
         grabInteractable.selectExited.AddListener(OnRelease);
+    }
+
+    private void Update()
+    {
+        if (snapPoint == null || snapRenderer == null) return;
+
+        float distance = Vector3.Distance(transform.position, snapPoint.position);
+
+        if (distance <= snapDistance)
+        {
+            if (snapRenderer.material != highlightMaterial)
+            {
+                snapRenderer.material = highlightMaterial;
+            }
+        }
+        else
+        {
+            if (snapRenderer.material != originalMaterial)
+            {
+                snapRenderer.material = originalMaterial;
+            }
+        }
     }
 
     private void OnRelease(SelectExitEventArgs args)
@@ -57,7 +87,7 @@ public class SnapToPoint : MonoBehaviour
         // Snap position + rotation
         transform.position = snapPoint.position;
         //transform.rotation = snapPoint.rotation;
-        foundedObject.GetComponent<MeshRenderer>().enabled = false; // Ẩn đối tượng snap point nếu có
+        snapRenderer.enabled = false; // Ẩn đối tượng snap point nếu có
         // (Optional) khóa không cho grab nữa
         grabInteractable.enabled = false;
         Debug.LogError("Object snapped to point!");

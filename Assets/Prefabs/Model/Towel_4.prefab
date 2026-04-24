@@ -319,6 +319,10 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::SnapToPoint
   snapPoint: {fileID: 0}
   snapDistance: 3
+  onSnapped:
+    m_PersistentCalls:
+      m_Calls: []
+  highlightMaterial: {fileID: 2100000, guid: 78ea2ec539d1aee48b9870e9e21354cf, type: 2}
 --- !u!114 &8756879466330047607
 MonoBehaviour:
   m_ObjectHideFlags: 0

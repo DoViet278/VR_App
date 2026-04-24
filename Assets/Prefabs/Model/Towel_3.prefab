@@ -354,6 +354,10 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::SnapToPoint
   snapPoint: {fileID: 0}
   snapDistance: 5
+  onSnapped:
+    m_PersistentCalls:
+      m_Calls: []
+  highlightMaterial: {fileID: 2100000, guid: 78ea2ec539d1aee48b9870e9e21354cf, type: 2}
 --- !u!114 &3677460465790783008
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -366,4 +370,3 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: f1379157d6f7eb64095ac597e3cf6e21, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::FracturablePart
-  fracturedPrefab: {fileID: 6159468811696869820, guid: 28aa2b4096c8b814f9216d2d88f9b9bb, type: 3}
