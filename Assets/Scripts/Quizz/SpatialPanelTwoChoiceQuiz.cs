@@ -26,6 +26,7 @@ public class SpatialPanelTwoChoiceQuiz : MonoBehaviour
         public string questionText;
 
         public Sprite questionImage;
+        public bool chooseMaterial;
         public List<AnswerItem> answers = new List<AnswerItem>();
     }
 
@@ -64,6 +65,7 @@ public class SpatialPanelTwoChoiceQuiz : MonoBehaviour
 
     private int currentQuestionIndex;
     private int score;
+    public int wrongMaterialCount;
     private bool answeredCurrentQuestion;
     private bool isWaitingForSnap = false;
 
@@ -89,6 +91,7 @@ public class SpatialPanelTwoChoiceQuiz : MonoBehaviour
 
         currentQuestionIndex = 0;
         score = 0;
+        wrongMaterialCount = 0;
         ShowQuestion(currentQuestionIndex);
     }
 
@@ -145,9 +148,17 @@ public class SpatialPanelTwoChoiceQuiz : MonoBehaviour
         answeredCurrentQuestion = true;
 
         bool isCorrect = selectedAnswer.isCorrect;
-        if (isCorrect)
-            score++;
-
+        
+        if (q.chooseMaterial)
+        {
+            if (!isCorrect)
+                wrongMaterialCount++;
+        }
+        else
+        {
+            if (isCorrect)
+                score++;
+        }
         HighlightAnswerResult(q, selectedOption);
 
         string result = isCorrect ? "Correct" : "Wrong";
@@ -297,8 +308,14 @@ public class SpatialPanelTwoChoiceQuiz : MonoBehaviour
 
         SetImageSprite(optionBImageView, null);
 
-        float percent = questions.Count > 0 ? (score * 100f) / questions.Count : 0f;
-        SetFeedback("Final score: " + score + "/" + questions.Count + " (" + percent.ToString("0.#") + "%)");
+        int maxScore = 0;
+        foreach (var q in questions)
+        {
+            if (!q.chooseMaterial) maxScore++;
+        }
+
+        float percent = maxScore > 0 ? (score * 100f) / maxScore : 0f;
+        SetFeedback("Final score: " + score + "/" + maxScore + " (" + percent.ToString("0.#") + "%)");
         SetFinalResultVisible(true, "Result: " + percent.ToString("0.#") + "% correct");
         SetProgress("Completed");
         SetMainInteractable(false);
