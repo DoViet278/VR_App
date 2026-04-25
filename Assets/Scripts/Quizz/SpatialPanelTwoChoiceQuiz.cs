@@ -50,18 +50,19 @@ public class SpatialPanelTwoChoiceQuiz : MonoBehaviour
     [Header("UI - Optional")]
     [SerializeField] private TextMeshProUGUI feedbackText;
     [SerializeField] private TextMeshProUGUI progressText;
+    [SerializeField] private TextMeshProUGUI scoreText;
     [SerializeField] private TextMeshProUGUI finalResultText;
     [SerializeField] private Button nextButton;
     [SerializeField] private Button restartButton;
 
     [Header("Spatial Panel Scroll")]
-    [Tooltip("Assign the ScrollRect of your Spatial Panel content.")]
-    [SerializeField] private ScrollRect panelScrollRect;
+    // [Tooltip("Assign the ScrollRect of your Spatial Panel content.")]
+    // [SerializeField] private ScrollRect panelScrollRect;
 
-    [Header("Result Colors")]
-    [SerializeField] private Color correctColor = new Color(0.2f, 0.8f, 0.2f, 1f);
-    [SerializeField] private Color wrongColor = new Color(0.9f, 0.2f, 0.2f, 1f);
-    [SerializeField] private Color defaultColor = Color.white;
+    [Header("Result Styles")]
+    [SerializeField] private Sprite correctSprite;
+    [SerializeField] private Sprite wrongSprite;
+    [SerializeField] private Sprite defaultSprite;
 
     private int currentQuestionIndex;
     private int score;
@@ -101,25 +102,38 @@ public class SpatialPanelTwoChoiceQuiz : MonoBehaviour
         {
             optionAButton.onClick.RemoveListener(OnClickOptionA);
             optionAButton.onClick.AddListener(OnClickOptionA);
+            optionAButton.onClick.RemoveListener(PlayClickSound);
+            optionAButton.onClick.AddListener(PlayClickSound);
         }
 
         if (optionBButton != null)
         {
             optionBButton.onClick.RemoveListener(OnClickOptionB);
             optionBButton.onClick.AddListener(OnClickOptionB);
+            optionBButton.onClick.RemoveListener(PlayClickSound);
+            optionBButton.onClick.AddListener(PlayClickSound);
         }
 
         if (nextButton != null)
         {
             nextButton.onClick.RemoveListener(NextQuestion);
             nextButton.onClick.AddListener(NextQuestion);
+            nextButton.onClick.RemoveListener(PlayClickSound);
+            nextButton.onClick.AddListener(PlayClickSound);
         }
 
         if (restartButton != null)
         {
             restartButton.onClick.RemoveListener(RestartQuiz);
             restartButton.onClick.AddListener(RestartQuiz);
+            restartButton.onClick.RemoveListener(PlayClickSound);
+            restartButton.onClick.AddListener(PlayClickSound);
         }
+    }
+
+    private void PlayClickSound()
+    {
+        if (SoundManage.Instance != null) SoundManage.Instance.PlayClickButton();
     }
 
     private void OnClickOptionA()
@@ -165,6 +179,12 @@ public class SpatialPanelTwoChoiceQuiz : MonoBehaviour
         string explanationPart = string.IsNullOrWhiteSpace(selectedAnswer.explain) ? string.Empty : "\n" + selectedAnswer.explain;
         SetFeedback(result + explanationPart);
 
+        if (SoundManage.Instance != null)
+        {
+            if (isCorrect) SoundManage.Instance.PlayCorrectAnswer();
+            else SoundManage.Instance.PlayWrongAnswer();
+        }
+
         if (selectedAnswer.spawnPrefab != null && spawnPoint != null)
         {
             GameObject spawnedObject = Instantiate(selectedAnswer.spawnPrefab, spawnPoint.position, spawnPoint.rotation);
@@ -186,6 +206,7 @@ public class SpatialPanelTwoChoiceQuiz : MonoBehaviour
                 // Sau khi xếp thành công -> hiện quiz và đi tới câu tiếp
                 snap.onSnapped.AddListener(() => 
                 {
+                    if (SoundManage.Instance != null) SoundManage.Instance.PlayCompleteBuildPart();
                     isWaitingForSnap = false;
                     gameObject.SetActive(true);
                     NextQuestion();
@@ -273,11 +294,31 @@ public class SpatialPanelTwoChoiceQuiz : MonoBehaviour
             SetImageSprite(optionBImageView, null);
         }
 
-        ResetAnswerColors();
+        ResetAnswerStyles();
         SetFinalResultVisible(false, string.Empty);
 
         SetFeedback("Choose one answer.");
-        SetProgress("Question " + (index + 1) + "/" + questions.Count + " | Score: " + score);
+
+        int totalNormalQuestions = 0;
+        int currentNormalQuestion = 0;
+        for (int i = 0; i < questions.Count; i++)
+        {
+            if (!questions[i].chooseMaterial)
+            {
+                totalNormalQuestions++;
+                if (i <= index) currentNormalQuestion++;
+            }
+        }
+
+        if (q.chooseMaterial)
+        {
+            SetProgress("MATERIAL SELECTION");
+        }
+        else
+        {
+            SetProgress("QUESTION: " + currentNormalQuestion + "/" + totalNormalQuestions);
+        }
+        SetScore("Score: " + score);
         SetMainInteractable(hasValidAnswers);
 
         if (nextButton != null)
@@ -286,7 +327,7 @@ public class SpatialPanelTwoChoiceQuiz : MonoBehaviour
         if (restartButton != null)
             restartButton.gameObject.SetActive(false);
 
-        ResetScrollToTop();
+        // ResetScrollToTop();
     }
 
     private void ShowFinal()
@@ -318,8 +359,9 @@ public class SpatialPanelTwoChoiceQuiz : MonoBehaviour
         SetFeedback("Final score: " + score + "/" + maxScore + " (" + percent.ToString("0.#") + "%)");
         SetFinalResultVisible(true, "Result: " + percent.ToString("0.#") + "% correct");
         SetProgress("Completed");
+        SetScore("Score: " + score);
         SetMainInteractable(false);
-        ResetAnswerColors();
+        ResetAnswerStyles();
 
         if (nextButton != null)
             nextButton.gameObject.SetActive(false);
@@ -327,7 +369,12 @@ public class SpatialPanelTwoChoiceQuiz : MonoBehaviour
         if (restartButton != null)
             restartButton.gameObject.SetActive(true);
 
-        ResetScrollToTop();
+        // ResetScrollToTop();
+
+        if (score >= maxScore && maxScore > 0)
+        {
+            if (SoundManage.Instance != null) SoundManage.Instance.PlayCompleteBuildFinish();
+        }
 
         // Nổ tháp nếu có dùng
         if (TowerFractureManager.instance != null)
@@ -355,6 +402,12 @@ public class SpatialPanelTwoChoiceQuiz : MonoBehaviour
     {
         if (progressText != null)
             progressText.text = message;
+    }
+
+    private void SetScore(string message)
+    {
+        if (scoreText != null)
+            scoreText.text = message;
     }
 
     private void SetFinalResultVisible(bool visible, string message)
@@ -389,43 +442,47 @@ public class SpatialPanelTwoChoiceQuiz : MonoBehaviour
         }
 
         if (correctIndex >= 0)
-            SetAnswerColor(correctIndex, correctColor);
+            SetAnswerStyle(correctIndex, correctSprite);
 
         if (selectedIndex != correctIndex)
-            SetAnswerColor(selectedIndex, wrongColor);
+            SetAnswerStyle(selectedIndex, wrongSprite);
     }
 
-    private void ResetAnswerColors()
+    private void ResetAnswerStyles()
     {
-        SetAnswerColor(0, defaultColor);
-        SetAnswerColor(1, defaultColor);
+        SetAnswerStyle(0, defaultSprite);
+        SetAnswerStyle(1, defaultSprite);
     }
 
-    private void SetAnswerColor(int answerIndex, Color color)
+    private void SetAnswerStyle(int answerIndex, Sprite sprite)
     {
         if (answerIndex == 0 && optionAButton != null)
         {
             Image image = optionAButton.targetGraphic as Image;
-            if (image != null)
-                image.color = color;
+            if (image != null && sprite != null)
+            {
+                image.sprite = sprite;
+            }
         }
         else if (answerIndex == 1 && optionBButton != null)
         {
             Image image = optionBButton.targetGraphic as Image;
-            if (image != null)
-                image.color = color;
+            if (image != null && sprite != null)
+            {
+                image.sprite = sprite;
+            }
         }
     }
 
-    private void ResetScrollToTop()
-    {
-        if (panelScrollRect == null)
-            return;
+    // private void ResetScrollToTop()
+    // {
+    //     if (panelScrollRect == null)
+    //         return;
 
-        Canvas.ForceUpdateCanvases();
-        panelScrollRect.verticalNormalizedPosition = 1f;
-        panelScrollRect.horizontalNormalizedPosition = 0f;
-    }
+    //     Canvas.ForceUpdateCanvases();
+    //     panelScrollRect.verticalNormalizedPosition = 1f;
+    //     panelScrollRect.horizontalNormalizedPosition = 0f;
+    // }
 
     private bool IsQuestionIndexValid(int index)
     {
