@@ -15,6 +15,7 @@ public class TowerFractureManager : MonoBehaviour
     {
         if (!parts.Contains(part))
         {
+            Debug.LogError("Registering part: " + part.name);
             parts.Add(part);
         }
     }

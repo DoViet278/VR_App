@@ -5,7 +5,7 @@ using UnityEngine.XR.Interaction.Toolkit;
 public class SnapToPoint : MonoBehaviour
 {
     public Transform snapPoint;    
-    public float snapDistance = 3f;
+    public float snapDistance = 3f; 
     public UnityEvent onSnapped = new UnityEvent();
 
     private UnityEngine.XR.Interaction.Toolkit.Interactables.XRGrabInteractable grabInteractable;
@@ -39,7 +39,7 @@ public class SnapToPoint : MonoBehaviour
             }
             else
             {
-                Debug.LogError("Snap point NOT found: " + targetName);
+                Debug.LogError("Snap point NOT found: " + targetName);  
             }
         }
 
@@ -93,5 +93,12 @@ public class SnapToPoint : MonoBehaviour
         Debug.LogError("Object snapped to point!");
 
         onSnapped?.Invoke();
+
+        if (StateModelManager.Instance.willFracture)
+        {
+            Debug.LogError("willFracture is true, fracturing tower...");
+            TowerFractureManager.instance.FractureAll();
+        }
+
     }
 }
