@@ -38,6 +38,12 @@ public class FracturablePart : MonoBehaviour
         //fracturedObject.transform.rotation = transform.rotation;
         //fracturedObject.transform.localScale = transform.localScale;
         Debug.LogError("Fracturing: " + fracturedObject.name);
+        
+        if (SoundManage.Instance != null)
+        {
+            SoundManage.Instance.PlayFractureSound();
+        }
+
         fracturedObject.transform.GetChild(0).gameObject.SetActive(true);
 
         Rigidbody[] rbs = fracturedObject.GetComponentsInChildren<Rigidbody>();
