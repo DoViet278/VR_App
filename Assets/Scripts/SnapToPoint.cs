@@ -23,7 +23,6 @@ public class SnapToPoint : MonoBehaviour
         if (snapPoint == null)
         {
             string cleanName = gameObject.name.Replace("(Clone)", "");
-            Debug.LogError("Snap point not assigned, trying to find by name: " + cleanName);
             string targetName = "pos_" + cleanName;
 
             foundedObject = GameObject.Find(targetName);
@@ -94,5 +93,12 @@ public class SnapToPoint : MonoBehaviour
         Debug.LogError("Object snapped to point!");
 
         onSnapped?.Invoke();
+
+        if (StateModelManager.Instance.willFracture)
+        {
+            Debug.LogError("willFracture is true, fracturing tower...");
+            TowerFractureManager.instance.FractureAll();
+        }
+
     }
 }

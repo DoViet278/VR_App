@@ -5,8 +5,8 @@ public class StateModelManager : MonoBehaviour
 {
     public static StateModelManager Instance { get; private set; }
     public int currentState = 0; // 0: gui3, 1: min, 2: mid, 3: max
-    public int maxState = 3;
-
+    public int maxState = 2;
+    public bool willFracture = false; // Cờ để xác định có nên fracture hay không
     public event Action<int> OnStateChanged;
 
     private void Awake()
@@ -19,9 +19,16 @@ public class StateModelManager : MonoBehaviour
         if (currentState < maxState)
         {
             currentState++;
+            if(currentState == maxState)
+            {
+                Debug.LogError("Max state reached!");
+                willFracture = true; 
+            }
             OnStateChanged?.Invoke(currentState);
         }
     }
+
+
 
     public void DecreaseState()
     {
@@ -31,4 +38,6 @@ public class StateModelManager : MonoBehaviour
             OnStateChanged?.Invoke(currentState);
         }
     }
+
+
 }

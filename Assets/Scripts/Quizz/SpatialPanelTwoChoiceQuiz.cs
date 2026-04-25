@@ -1,3 +1,4 @@
+using System.Collections;
 using System.Collections.Generic;
 using TMPro;
 using UnityEngine;
@@ -92,6 +93,7 @@ public class SpatialPanelTwoChoiceQuiz : MonoBehaviour
 
         currentQuestionIndex = 0;
         score = 0;
+        wrongMaterialCount = 0;
         ShowQuestion(currentQuestionIndex);
     }
 
@@ -145,6 +147,11 @@ public class SpatialPanelTwoChoiceQuiz : MonoBehaviour
         SubmitAnswer(1);
     }
 
+    IEnumerator WasteASecond(float delay)
+    {
+        yield return new WaitForSeconds(delay);
+    }
+
     public void SubmitAnswer(int selectedOption)
     {
         if (answeredCurrentQuestion || isWaitingForSnap)
@@ -161,11 +168,13 @@ public class SpatialPanelTwoChoiceQuiz : MonoBehaviour
         answeredCurrentQuestion = true;
 
         bool isCorrect = selectedAnswer.isCorrect;
-        
+
         if (q.chooseMaterial)
         {
             if (!isCorrect)
+            {
                 StateModelManager.Instance.IncreaseState();
+            }
         }
         else
         {
@@ -180,8 +189,8 @@ public class SpatialPanelTwoChoiceQuiz : MonoBehaviour
 
         if (SoundManage.Instance != null)
         {
-            if (isCorrect) SoundManage.Instance.PlayCorrectAnswer();
-            else SoundManage.Instance.PlayWrongAnswer();
+            if (isCorrect && !q.chooseMaterial) SoundManage.Instance.PlayCorrectAnswer();
+            else if (!isCorrect && !q.chooseMaterial) SoundManage.Instance.PlayWrongAnswer();
         }
 
         if (selectedAnswer.spawnPrefab != null && spawnPoint != null)
@@ -197,12 +206,18 @@ public class SpatialPanelTwoChoiceQuiz : MonoBehaviour
             if (snap != null)
             {
                 isWaitingForSnap = true;
-                
+
+                // User requirement: "tắt quizz sau đó rơi ra vật liệu"
+                // Ẩn panel (thông qua gameObject của script này)
                 gameObject.SetActive(false);
 
-                snap.onSnapped.AddListener(() => 
+                // Sau khi xếp thành công -> hiện quiz và đi tới câu tiếp
+                snap.onSnapped.AddListener(() =>
                 {
                     if (SoundManage.Instance != null) SoundManage.Instance.PlayCompleteBuildPart();
+                    if (VRCameraManager.instance != null) VRCameraManager.instance.TeleportToAfterBuildPoint();
+
+                    StartCoroutine(WasteASecond(5f));
                     isWaitingForSnap = false;
                     gameObject.SetActive(true);
                     NextQuestion();
@@ -220,7 +235,7 @@ public class SpatialPanelTwoChoiceQuiz : MonoBehaviour
                 nextButton.gameObject.SetActive(true);
         }
 
-        SetMainInteractable(false);
+        // SetMainInteractable(false);
     }
 
     public void NextQuestion()
@@ -329,7 +344,7 @@ public class SpatialPanelTwoChoiceQuiz : MonoBehaviour
     private void ShowFinal()
     {
         optionAButton.gameObject.SetActive(false);
-        optionBButton.gameObject.SetActive(false);  
+        optionBButton.gameObject.SetActive(false);
         if (questionText != null)
             questionText.text = "Quiz finished";
 
