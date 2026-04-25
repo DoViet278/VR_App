@@ -23,6 +23,7 @@ public class SnapToPoint : MonoBehaviour
         if (snapPoint == null)
         {
             string cleanName = gameObject.name.Replace("(Clone)", "");
+            Debug.LogError("Snap point not assigned, trying to find by name: " + cleanName);
             string targetName = "pos_" + cleanName;
 
             foundedObject = GameObject.Find(targetName);
@@ -39,7 +40,7 @@ public class SnapToPoint : MonoBehaviour
             }
             else
             {
-                Debug.LogError("Snap point NOT found: " + targetName);
+                Debug.LogError("Snap point NOT found: " + targetName);  
             }
         }
 

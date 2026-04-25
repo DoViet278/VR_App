@@ -8,6 +8,10 @@ public class TowerPart : MonoBehaviour
     // Mỗi state = 1 list materials
     public List<MaterialSet> states;
 
+    private void Awake()
+    {
+        rend = GetComponent<MeshRenderer>();
+    }
     private void Start()
     {
         StateModelManager.Instance.OnStateChanged += UpdateMaterial;

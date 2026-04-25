@@ -166,7 +166,7 @@ public class SpatialPanelTwoChoiceQuiz : MonoBehaviour
 
         if (selectedAnswer.spawnPrefab != null && spawnPoint != null)
         {
-            GameObject spawnedObject = Instantiate(selectedAnswer.spawnPrefab, spawnPoint.position, spawnPoint.rotation);
+            GameObject spawnedObject = Instantiate(selectedAnswer.spawnPrefab, spawnPoint.position, spawnPoint.rotation,spawnPoint);
             FracturablePart part = spawnedObject.GetComponent<FracturablePart>();
             if (part != null)
             {
@@ -178,11 +178,8 @@ public class SpatialPanelTwoChoiceQuiz : MonoBehaviour
             {
                 isWaitingForSnap = true;
                 
-                // User requirement: "tắt quizz sau đó rơi ra vật liệu"
-                // Ẩn panel (thông qua gameObject của script này)
                 gameObject.SetActive(false);
 
-                // Sau khi xếp thành công -> hiện quiz và đi tới câu tiếp
                 snap.onSnapped.AddListener(() => 
                 {
                     isWaitingForSnap = false;
